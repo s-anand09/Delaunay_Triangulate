@@ -2,12 +2,26 @@
 
 #Importing Libraries
 ############################################################################## 
-import numpy as np
 import matplotlib.pyplot as plt
 
 
 #Function definitions:
 ##############################################################################   
+def Area3D (X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3):
+    import math
+    VEC1=[(X2-X1),(Y2-Y1),(Z2-Z1)]
+    VEC2=[(X3-X1),(Y3-Y1),(Z3-Z1)]
+    DotP=(VEC1[0]*VEC2[0])+(VEC1[1]*VEC2[1])+(VEC1[2]*VEC2[2])
+    Mag1=((VEC1[0]**2)+(VEC1[1]**2)+(VEC1[2]**2))**0.5
+    Mag2=((VEC2[0]**2)+(VEC2[1]**2)+(VEC2[2]**2))**0.5
+    ANG=math.acos(DotP/(Mag1*Mag2))
+    AR=0.5*Mag1*Mag2*math.sin(ANG)
+    return AR
+
+def dist_points(point1,point2):
+    import math
+    d=math.sqrt(((point2[0]-point1[0])**2)+((point2[1]-point1[1])**2)+((point2[2]-point1[2])**2))
+    return d
 
 def sign_CP(point_1,point_2,point_3): #Check sign of cross product
     V1=[point_2[0]-point_1[0],point_2[1]-point_1[1],point_2[2]-point_1[2]] #vector 1
@@ -27,15 +41,31 @@ def if_inside(triangle,point_coordinates): #Triangle, point_coordinates
         Res=False
     return Res 
 
-def add_point(triangle_list,point_coordinates): #List of existing triangles, point to be added
+def Aspect_ratio(triangle):
+    import math
+    A=Area3D(triangle[0][0],triangle[0][1],triangle[0][2],triangle[1][0],triangle[1][1],triangle[1][2],triangle[2][0],triangle[2][1],triangle[2][2])
+    L0=dist_points(triangle[0],triangle[1])
+    L1=dist_points(triangle[1],triangle[2])
+    L2=dist_points(triangle[2],triangle[0])
+    AR=(max(L0,L1,L2)*(L0+L1+L2))/(4*A*math.sqrt(3))
+    return AR
+    
+
+def add_point(triangle_list,point_coordinates,cutoff): #List of existing triangles, point to be added
     new_triangle_list=[]
     for each in triangle_list:
         if if_inside(each,point_coordinates)==False: #add unchanged triangles
             new_triangle_list=new_triangle_list+[each]
         else: #add new triangles
-            new_triangle_list=new_triangle_list+[[each[0],each[1],point_coordinates]]
-            new_triangle_list=new_triangle_list+[[each[1],each[2],point_coordinates]]
-            new_triangle_list=new_triangle_list+[[each[2],each[0],point_coordinates]]
+            AR1=Aspect_ratio([each[0],each[1],point_coordinates])
+            AR2=Aspect_ratio([each[1],each[2],point_coordinates])
+            AR3=Aspect_ratio([each[2],each[0],point_coordinates])
+            if max(AR1,AR2,AR3)<cutoff:
+                new_triangle_list=new_triangle_list+[[each[0],each[1],point_coordinates]]
+                new_triangle_list=new_triangle_list+[[each[1],each[2],point_coordinates]]
+                new_triangle_list=new_triangle_list+[[each[2],each[0],point_coordinates]]
+            else:
+                new_triangle_list=new_triangle_list+[each]
             #+[each[2],each[0],point_coordinates]
             # new_triangle_list.append()
             # new_triangle_list.append()
@@ -109,12 +139,6 @@ def plane_eq(triangle): #Plane equation
     eqn=[norm[0],norm[1],norm[2],d]
     return eqn
 
-
-def dist_points(point1,point2):
-    import math
-    d=math.sqrt(((point2[0]-point1[0])**2)+((point2[1]-point1[1])**2)+((point2[2]-point1[2])**2))
-    return d
-
 def seed_point(master_triangle, points_list,min_mesh):
     import random
     
@@ -151,16 +175,6 @@ def seed_point(master_triangle, points_list,min_mesh):
     points_list.append(sp)
     return points_list
 
-def Area3D (X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3):
-    import math
-    VEC1=[(X2-X1),(Y2-Y1),(Z2-Z1)]
-    VEC2=[(X3-X1),(Y3-Y1),(Z3-Z1)]
-    DotP=(VEC1[0]*VEC2[0])+(VEC1[1]*VEC2[1])+(VEC1[2]*VEC2[2])
-    Mag1=((VEC1[0]**2)+(VEC1[1]**2)+(VEC1[2]**2))**0.5
-    Mag2=((VEC2[0]**2)+(VEC2[1]**2)+(VEC2[2]**2))**0.5
-    ANG=math.acos(DotP/(Mag1*Mag2))
-    AR=0.5*Mag1*Mag2*math.sin(ANG)
-    return AR
 
 def index_maxArea(triangle_list):
     Area=[]
@@ -186,6 +200,7 @@ mt=[[0,0,0],[4,0,0],[2,3,0]]
 triangle_list=[mt]
 N=int(input("Enter the number of seed points: "))
 Minmesh=float(input("Enter the minimum mesh length: "))
+cutoff=int(input("Enter the initial cutoff aspect ratio: "))
 plist=[]
 
 #for i in range(0,N):
@@ -193,21 +208,37 @@ plist=[]
 
 
 #for each in plist: 
-    
-for i in range(0,N):
+i=0
+j=0
+old_i=0
+while i<N:
+    if old_i==i:
+        j+=1
+    if j==10:
+        j=0
+        cutoff+=1
+    old_list=triangle_list
     plist=seed_point(mt,plist,Minmesh)
     index=index_maxArea(triangle_list)
+    old_i=i
     if if_inside(triangle_list[index],plist[i])==True:
-        triangle_list=add_point(triangle_list,plist[i])
-        #Sweeping 
-        for t1 in triangle_list:
-            i1=triangle_list.index(t1)
-            for t2 in triangle_list:
-                i2=triangle_list.index(t2)
-                if common_edge(t1,t2)==True:
-                    out=swap_edges(t1,t2)
-                    triangle_list[i1]=out[0]
-                    triangle_list[i2]=out[1]
+        triangle_list=add_point(triangle_list,plist[i],cutoff)
+        if triangle_list==old_list:
+            plist.pop(i)
+        else:
+            #Sweeping 
+            for t1 in triangle_list:
+                i1=triangle_list.index(t1)
+                for t2 in triangle_list:
+                    i2=triangle_list.index(t2)
+                    if common_edge(t1,t2)==True:
+                        out=swap_edges(t1,t2)
+                        triangle_list[i1]=out[0]
+                        triangle_list[i2]=out[1]
+            i+=1
+    else:
+        plist.pop(i)
+
 
 
 
