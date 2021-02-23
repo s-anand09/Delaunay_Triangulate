@@ -1,52 +1,14 @@
-from mpl_toolkits.mplot3d import Axes3D
+#delaunay triangulation
+
+#Importing Libraries
+############################################################################## 
 import matplotlib.pyplot as plt
-import random
-import math
-import csv
 
-T_C=[[0,0,0],[250,0,0],[0,0,250]]
-A=[(T_C[1][0]-T_C[0][0]),(T_C[1][1]-T_C[0][1]),(T_C[1][2]-T_C[0][2])]
-B=[(T_C[2][0]-T_C[1][0]),(T_C[2][1]-T_C[1][1]),(T_C[2][2]-T_C[1][2])]
-CrossAB=[((A[1]*B[2])-(A[2]*B[1])),((A[2]*B[0])-(A[0]*B[2])),((A[0]*B[1])-(A[1]*B[0]))]
-D=((T_C[0][0]*CrossAB[0])+(T_C[0][1]*CrossAB[1])+(T_C[0][2]*CrossAB[2]))
-X=((T_C[1][0]*CrossAB[0])+(T_C[1][1]*CrossAB[1])+(T_C[1][2]*CrossAB[2]))
-#Putting Coordinates:
-#A1B1=[((T_C[0][1]*T_C[1][2])-(T_C[1][1]*T_C[0][2])),((T_C[0][2]*T_C[1][0])-(T_C[0][0]*T_C[1][2])),((T_C[0][0]*T_C[1][1])-(T_C[0][1]*T_C[1][0]))]
-#A1C1=[((T_C[0][1]*T_C[2][2])-(T_C[2][1]*T_C[0][2])),((T_C[0][2]*T_C[2][0])-(T_C[0][0]*T_C[2][2])),((T_C[0][0]*T_C[2][1])-(T_C[0][1]*T_C[2][0]))]
-#def 
-#def CP(Tcd,Pp):
 
-def crossProdSign(P1,P2,P3):
-    V1=[0]*3
-    V2=[0]*3
-    i=0
-    for each in P2:
-        V1[i]=P2[i]-P1[i]
-        V2[i]=P3[i]-P1[i]
-        i+=1
-    Sig1=(V1[1]*V2[2])-(V2[1]*V1[2])
-    if Sig1!=0:
-        Sig1=Sig1/abs(Sig1)
-    Sig2=(V1[2]*V2[0])-(V2[2]*V1[0])
-    if Sig2!=0:
-        Sig2=Sig2/abs(Sig2)
-    Sig3=(V1[0]*V2[1])-(V2[0]*V1[1])
-    if Sig3!=0:
-        Sig3=Sig3/abs(Sig3)
-    Sig=[Sig1,Sig2,Sig3]
-    return Sig
-
-def checkInternal(A,B,C,P):
-    C1=crossProdSign(A,B,P)
-    C2=crossProdSign(B,C,P)
-    C3=crossProdSign(C,A,P)
-    if C1==C2 and C2==C3:
-        Res=True
-    else:
-        Res=False
-    return Res    
-    
+#Function definitions:
+##############################################################################   
 def Area3D (X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3):
+    import math
     VEC1=[(X2-X1),(Y2-Y1),(Z2-Z1)]
     VEC2=[(X3-X1),(Y3-Y1),(Z3-Z1)]
     DotP=(VEC1[0]*VEC2[0])+(VEC1[1]*VEC2[1])+(VEC1[2]*VEC2[2])
@@ -56,73 +18,246 @@ def Area3D (X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3):
     AR=0.5*Mag1*Mag2*math.sin(ANG)
     return AR
 
-Area=Area3D(T_C[0][0],T_C[0][1],T_C[0][2],T_C[1][0],T_C[1][1],T_C[1][2],T_C[2][0],T_C[2][1],T_C[2][2])
-print(A,B,CrossAB,D,Area)
-print(X==D)
-L_P=[]
-n=input("Enter number of points : ")
-mind=input("Enter the minimum mesh length : ")
-i=0
-while i<int(n):
-    while True:
-        #X1=random.randrange(5,92,0.05)
-        #Z1=random.randrange(-3,104,0.05)
-        switch=0
-#        X1=random.uniform(5,250)
-#        Z1=random.uniform(-3,103)
-#        Y1=(D-(CrossAB[0]*X1)-(CrossAB[2]*Z1))/CrossAB[1]
-        X1=random.uniform(0,250)
-        Z1=random.uniform(0,250)
-        Y1=0
-        Point=[X1,Y1,Z1]
-        try:
-            if L_P != []:
-                for each in L_P:
-                    d=(((each[0]-X1)**2)+((each[1]-Y1)**2)+((each[2]-Z1)**2))**0.5
-                    if d<float(mind):
-                        switch=1
-            if checkInternal(T_C[0],T_C[1],T_C[2],Point)==True and switch==0:
-                L_P.append([X1,Y1,Z1])
-                break           
-        except:
-            v=1
-    i+=1
+def dist_points(point1,point2):
+    import math
+    d=math.sqrt(((point2[0]-point1[0])**2)+((point2[1]-point1[1])**2)+((point2[2]-point1[2])**2))
+    return d
 
+def sign_CP(point_1,point_2,point_3): #Check sign of cross product
+    V1=[point_2[0]-point_1[0],point_2[1]-point_1[1],point_2[2]-point_1[2]] #vector 1
+    V2=[point_3[0]-point_1[0],point_3[1]-point_1[1],point_3[2]-point_1[2]] #vector 2
+    Sign=[(V1[1]*V2[2])-(V2[1]*V1[2]),(V1[2]*V2[0])-(V2[2]*V1[0]),(V1[0]*V2[1])-(V2[0]*V1[1])] #sign of new vector
+    for i in range(0,3):
+        if Sign[i]!=0:Sign[i]=Sign[i]/abs(Sign[i])
+    return Sign
+    
+def if_inside(triangle,point_coordinates): #Triangle, point_coordinates
+    C1=sign_CP(triangle[0],triangle[1],point_coordinates) #Check for side 1 
+    C2=sign_CP(triangle[1],triangle[2],point_coordinates) #Check for side 2
+    C3=sign_CP(triangle[2],triangle[0],point_coordinates) #Check for side 3
+    if C1==C2 and C2==C3: #Should be equal if point lies inside the triangle
+        Res=True
+    else:
+        Res=False
+    return Res 
+
+def Aspect_ratio(triangle):
+    import math
+    A=Area3D(triangle[0][0],triangle[0][1],triangle[0][2],triangle[1][0],triangle[1][1],triangle[1][2],triangle[2][0],triangle[2][1],triangle[2][2])
+    L0=dist_points(triangle[0],triangle[1])
+    L1=dist_points(triangle[1],triangle[2])
+    L2=dist_points(triangle[2],triangle[0])
+    AR=(max(L0,L1,L2)*(L0+L1+L2))/(4*A*math.sqrt(3))
+    return AR
+    
+
+def add_point(triangle_list,point_coordinates,cutoff): #List of existing triangles, point to be added
+    new_triangle_list=[]
+    for each in triangle_list:
+        if if_inside(each,point_coordinates)==False: #add unchanged triangles
+            new_triangle_list=new_triangle_list+[each]
+        else: #add new triangles
+            AR1=Aspect_ratio([each[0],each[1],point_coordinates])
+            AR2=Aspect_ratio([each[1],each[2],point_coordinates])
+            AR3=Aspect_ratio([each[2],each[0],point_coordinates])
+            if max(AR1,AR2,AR3)<cutoff:
+                new_triangle_list=new_triangle_list+[[each[0],each[1],point_coordinates]]
+                new_triangle_list=new_triangle_list+[[each[1],each[2],point_coordinates]]
+                new_triangle_list=new_triangle_list+[[each[2],each[0],point_coordinates]]
+            else:
+                new_triangle_list=new_triangle_list+[each]
+            #+[each[2],each[0],point_coordinates]
+            # new_triangle_list.append()
+            # new_triangle_list.append()
+    return new_triangle_list
+            
+            
+def common_edge(triangle_1,triangle_2): #check for common edge
+    n_common=0
+    for each in triangle_1:
+        for every in triangle_2:
+            if each==every:n_common+=1
+    if n_common==2:
+        Res=True
+    else: Res=False
+    return Res
+
+def find_common_edge(triangle_1,triangle_2): #find common edge
+    com_edge=[]
+    for each in triangle_1:
+        for every in triangle_2:
+            if each==every:
+                com_edge.append(each)
+    return com_edge
+
+def get_angle(point_1,point_2,point_3): #enclosed angle
+    import math 
+    V1=[point_2[0]-point_1[0],point_2[1]-point_1[1],point_2[2]-point_1[2]] #vector 1
+    V2=[point_2[0]-point_3[0],point_2[1]-point_3[1],point_2[2]-point_3[2]] #vector 2
+    dot_v1_v2=(V1[0]*V2[0])+(V1[1]*V2[1])+(V1[2]*V2[2]) #dot products
+    mag_v1=math.sqrt((V1[0]**2)+(V1[1]**2)+(V1[2]**2)) #Magnitude v1
+    mag_v2=math.sqrt((V2[0]**2)+(V2[1]**2)+(V2[2]**2)) #Magnitude v2
+    Theta=180*((math.acos((dot_v1_v2)/(mag_v1*mag_v2)))/math.pi)
+    if Theta>180:
+        Theta=360-Theta
+    return Theta
+
+def find_norm(point_1,point_2,point_3): #Find normal to plane
+    V1=[point_2[0]-point_1[0],point_2[1]-point_1[1],point_2[2]-point_1[2]] #vector 1
+    V2=[point_3[0]-point_1[0],point_3[1]-point_1[1],point_3[2]-point_1[2]] #vector 2
+    Norm=[(V1[1]*V2[2])-(V2[1]*V1[2]),(V1[2]*V2[0])-(V2[2]*V1[0]),(V1[0]*V2[1])-(V2[0]*V1[1])] 
+    return Norm
+    
+def vec_angle(V1,V2): #enclosed angle b/w two vectors
+    import math 
+    dot_v1_v2=(V1[0]*V2[0])+(V1[1]*V2[1])+(V1[2]*V2[2]) #dot products
+    mag_v1=math.sqrt((V1[0]**2)+(V1[1]**2)+(V1[2]**2)) #Magnitude v1
+    mag_v2=math.sqrt((V2[0]**2)+(V2[1]**2)+(V2[2]**2)) #Magnitude v2
+    Theta=180*((math.acos((dot_v1_v2)/(mag_v1*mag_v2)))/math.pi)
+    if Theta>180:
+        Theta=360-Theta
+    return Theta
+    
+def swap_edges(triangle_1,triangle_2): #Swap edges for better aspect ratio
+    comedge=find_common_edge(triangle_1,triangle_2) #finding common edges
+    for each in triangle_1:
+        if each not in comedge:
+            t1_op=each
+    for each in triangle_2:
+        if each not in comedge:
+            t2_op=each
+    old_angle= get_angle(comedge[0],t1_op,comedge[1])+get_angle(comedge[0],t2_op,comedge[1]) #angle for current configuration
+    if old_angle>180:
+        triangle_set=[[t1_op,comedge[0],t2_op],[t1_op,comedge[1],t2_op]]
+    else:
+        triangle_set=[triangle_1,triangle_2]
+    return triangle_set
+
+def plane_eq(triangle): #Plane equation
+    norm=find_norm(triangle[0],triangle[1],triangle[2])
+    d=-(norm[0]*triangle[0][0])-(norm[1]*triangle[0][1])-(norm[2]*triangle[0][2])
+    eqn=[norm[0],norm[1],norm[2],d]
+    return eqn
+
+def seed_point(master_triangle, points_list,min_mesh):
+    import random
+    
+    mt=master_triangle
+    
+    plane=plane_eq(mt)
+    
+    xmin=min(mt[0][0],mt[1][0],mt[2][0])
+    xmax=max(mt[0][0],mt[1][0],mt[2][0])
+    
+    ymin=min(mt[0][1],mt[1][1],mt[2][1])
+    ymax=max(mt[0][1],mt[1][1],mt[2][1]) 
+    
+    flag=True
+    
+    while flag==True:
+        
+        flag1=True
+        flag2=True
+        
+        sp=[random.uniform(xmin,xmax),random.uniform(ymin,ymax)]
+        z=((-plane[0]*sp[0])-(-plane[1]*sp[1])-plane[3])/plane[2]
+        sp.append(z)
+        for each in points_list:
+            if dist_points(each,sp)<min_mesh:
+                flag1=False
+        
+        if if_inside(mt,sp)==False:
+            flag2=False
+        
+        if flag1==True and flag2==True:
+            flag=False
+            
+    points_list.append(sp)
+    return points_list
+
+
+def index_maxArea(triangle_list):
+    Area=[]
+    for each in triangle_list:
+        A=Area3D(each[0][0],each[0][1],each[0][2],each[1][0],each[1][1],each[1][2],each[2][0],each[2][1],each[2][2])
+        Area.append(A)
+    index=Area.index(max(Area))
+    return index
+    
+#Calculations
+############################################################################## 
+    
+# print(swap_edges([[0, 30, 0], [-100, 0, 0], [0, -30, 0]], [[0, 30, 0], [100, 0, 0], [0, -30, 0]]))
+    
+# x=[[[0,0,0],[4,0,0],[2,3,0]],[[4,0,0],[5,3,0],[2,3,0]]]#,[2,1,0])
+# x1=(find_norm([0,0,0],[42,50,200],[200,35,200]))
+# print(vec_angle((x1),[1,0,0]))
+# print(vec_angle((x1),[0,1,0]))
+# print(vec_angle((x1),[0,0,1]))
+# #print(x)
+
+mt=[[0,0,0],[4,0,0],[2,3,0]]
+triangle_list=[mt]
+N=int(input("Enter the number of seed points: "))
+Minmesh=float(input("Enter the minimum mesh length: "))
+cutoff=int(input("Enter the initial cutoff aspect ratio: "))
+plist=[]
+
+#for i in range(0,N):
+#   plist=seed_point(mt,plist,Minmesh)
+
+
+#for each in plist: 
+i=0
+j=0
+old_i=0
+while i<N:
+    if old_i==i:
+        j+=1
+    if j==10:
+        j=0
+        cutoff+=1
+    old_list=triangle_list
+    plist=seed_point(mt,plist,Minmesh)
+    index=index_maxArea(triangle_list)
+    old_i=i
+    if if_inside(triangle_list[index],plist[i])==True:
+        triangle_list=add_point(triangle_list,plist[i],cutoff)
+        if triangle_list==old_list:
+            plist.pop(i)
+        else:
+            #Sweeping 
+            for t1 in triangle_list:
+                i1=triangle_list.index(t1)
+                for t2 in triangle_list:
+                    i2=triangle_list.index(t2)
+                    if common_edge(t1,t2)==True:
+                        out=swap_edges(t1,t2)
+                        triangle_list[i1]=out[0]
+                        triangle_list[i2]=out[1]
+            i+=1
+    else:
+        plist.pop(i)
+
+
+
+
+#Plotting the triangles
+    
 XC=[]; YC=[]; ZC=[]
-for each in L_P:
+for each in plist:
     XC.append(each[0])
     YC.append(each[1])
     ZC.append(each[2])
-
 fig = plt.figure()
+
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(XC, YC, ZC, c='r', marker='o')
-ax.plot([T_C[0][0],T_C[1][0]], [T_C[0][1],T_C[1][1]], [T_C[0][2],T_C[1][2]], '-b')
-ax.plot([T_C[1][0],T_C[2][0]], [T_C[1][1],T_C[2][1]], [T_C[1][2],T_C[2][2]], '-b')
-ax.plot([T_C[2][0],T_C[0][0]], [T_C[2][1],T_C[0][1]], [T_C[2][2],T_C[0][2]], '-b')
-T_S=[T_C]
+# ax.scatter(XC, YC, ZC, c='r', marker='o')
 
-for every in L_P:
-    i=0
-    for r1 in T_S:
-        if checkInternal(r1[0],r1[1],r1[2],every)==True:
-            T_S[i]=[r1[0],r1[1],every]
-            T_S.append([r1[1],r1[2],every])
-            T_S.append([r1[2],r1[0],every])
-        i+=1
-
-print(T_S)
-
-for each in T_S:
+for each in triangle_list:
     ax.plot([each[0][0],each[1][0]], [each[0][1],each[1][1]], [each[0][2],each[1][2]], '-b')
     ax.plot([each[1][0],each[2][0]], [each[1][1],each[2][1]], [each[1][2],each[2][2]], '-b')
     ax.plot([each[2][0],each[0][0]], [each[2][1],each[0][1]], [each[2][2],each[0][2]], '-b')
-                
-plt.show()
+    
 
-with open("out.csv", "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerows(L_P)
-
-x=input(" CDE ")
     
